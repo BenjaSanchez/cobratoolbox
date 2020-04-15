@@ -61,7 +61,7 @@ for pos = 1:size(fieldentries,1)
             
             
             dbname = convertSBMLID(regexprep(annotationsFields{fieldid},[field allowedQualifiers{i} '(.*)' 'ID$'],'$1'),false);
-            dbrdfstring = [bagindentlevel '    <rdf:li rdf:resource="http://identifiers.org/' dbname '/'];
+            dbrdfstring = [bagindentlevel '    <rdf:li rdf:resource="https://identifiers.org/' dbname '/'];
             dbstring = strjoin(strcat(dbrdfstring,ids,sprintf('%s\n','"/>')),sprintf('\n'));
             dbnote = [dbnote, dbstring];
         end
@@ -76,7 +76,7 @@ for pos = 1:size(fieldentries,1)
             %If we have correct ids, we will annotate those.
             if any(correctids)
                 dbname = knownExistentFields{fieldid,1};
-                dbrdfstring = [bagindentlevel '    <rdf:li rdf:resource="http://identifiers.org/' dbname '/'];
+                dbrdfstring = [bagindentlevel '    <rdf:li rdf:resource="https://identifiers.org/' dbname '/'];
                 dbstring = strjoin(strcat(dbrdfstring,ids(correctids),sprintf('%s\n','"/>')),sprintf('\n'));
                 dbnote = [dbnote, dbstring];
             end
