@@ -408,10 +408,44 @@ totalNames=cell(size(totalValues,1),1);
 
 listUniqueValues=unique(totalValues);
 
+listCobrapyNames = {'cobra_default_lb';
+                    'cobra_default_ub';
+                    'cobra_0_bound';
+                    'minus_inf';
+                    'plus_inf';
+                    'R_ATPM_lower_bound';
+                    'R_EX_glc__D_e_lower_bound'};
+
 for i=1:length(listUniqueValues)
-    listUniqueNames{i,1}=['FB',num2str(i),'N',num2str(abs(round(listUniqueValues(i))))]; % create unique flux bound IDs.
+    if cobrapy
+        if listUniqueValues(i) == -1000
+            listUniqueNames{i,1}=listCobrapyNames{1};
+        elseif listUniqueValues(i) == +1000
+            listUniqueNames{i,1}=listCobrapyNames{2};
+        elseif listUniqueValues(i) == 0
+            listUniqueNames{i,1}=listCobrapyNames{3};
+        elseif listUniqueValues(i) < 0 && isinf(listUniqueValues(i)) 
+            listUniqueNames{i,1}=listCobrapyNames{4};
+        elseif isinf(listUniqueValues(i))
+            listUniqueNames{i,1}=listCobrapyNames{5};
+        elseif listUniqueValues(i) == -10
+            listUniqueNames{i,1}=listCobrapyNames{7};
+        elseif listUniqueValues(i) > 0
+            listUniqueNames{i,1}=listCobrapyNames{6};
+        end
+    else
+        listUniqueNames{i,1}=['FB',num2str(i),'N',num2str(abs(round(listUniqueValues(i))))]; % create unique flux bound IDs.
+    end
     ind=find(ismember(totalValues,listUniqueValues(i)));
     totalNames(ind)=listUniqueNames(i,1);
+end
+
+if cobrapy
+    listUniqueValues = [listUniqueValues; -inf; +inf];
+    listUniqueNames = [listUniqueNames; 'minus_inf'; 'plus_inf'];
+    [~, ind] = ismember(listCobrapyNames, listUniqueNames);
+    listUniqueValues = listUniqueValues(ind);
+    listUniqueNames = listCobrapyNames;
 end
 
 if ~isempty(listUniqueValues)
@@ -423,6 +457,9 @@ if ~isempty(listUniqueValues)
             fbc_parameter.sboTerm=626;
         else
             fbc_parameter.sboTerm=625;
+            if cobrapy
+                fbc_parameter.units='mmol_per_gDW_per_hr';
+            end
         end
         if i==1
             sbmlModel.parameter=fbc_parameter;
