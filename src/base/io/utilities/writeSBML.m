@@ -1,4 +1,4 @@
-function sbmlModel = writeSBML(model,fileName,compSymbolList,compNameList)
+function sbmlModel = writeSBML(model,fileName,compSymbolList,compNameList,cobrapy)
 % Exports a COBRA structure into an SBML FBCv2 file. A SBMLFBCv2 file  a file is written to the current Matlab path.
 %
 % USAGE:
@@ -12,6 +12,7 @@ function sbmlModel = writeSBML(model,fileName,compSymbolList,compNameList)
 % OPTIONAL INPUTS:
 %    compSymbolList:    List of compartment symbols
 %    compNameList:      List of copmartment names corresponding to compSymbolList
+%    cobrapy:           Boolean to guarantee compatibility with cobrapy (default=false)
 %
 % OUTPUT:
 %    sbmlModel:         SBML MATLAB structure
@@ -19,6 +20,10 @@ function sbmlModel = writeSBML(model,fileName,compSymbolList,compNameList)
 % .. Author: - Longfei Mao 24/09/15
 %            - Thomas Pfau May 2017 Updates to libsbml 5.15
 
+
+if nargin<4
+    cobrapy = false;
+end
 
 if nargin<3 || ~exist('compSymbolList','var') || isempty(compSymbolList) || ~isfield(model, 'compNames')
     if isfield(model, 'comps') && ~isfield(model,'compNames')
@@ -118,7 +123,11 @@ else
 end
 
 if isfield(model,'modelID')
-    sbmlModel.id = ['M_' convertSBMLID(model.modelID)];
+    if cobrapy
+        sbmlModel.id = convertSBMLID(model.modelID);
+    else
+        sbmlModel.id = ['M_' convertSBMLID(model.modelID)];
+    end
 else
     sbmlModel.id = 'COBRAModel';
 end
@@ -126,7 +135,11 @@ end
 
 %Set some model properties
 if isfield(model,'description')
-    sbmlModel.metaid = model.description;
+    if cobrapy
+        sbmlModel.metaid = ['meta_' sbmlModel.id];
+    else
+        sbmlModel.metaid = model.description;
+    end
 end
 
 
@@ -208,8 +221,16 @@ for i=1:size(model.mets, 1)
         end    
     end
     %% here notes can be formulated to include more annotations.
-    tmp_species.id=tmp_met;
-    tmp_species.metaid = tmp_species.id;
+    if cobrapy
+        tmp_species.id = strrep(tmp_met,'__91__','_');
+        tmp_species.id = strrep(tmp_species.id,'__93__','');
+        if ~isempty(tmp_annot) || ~isempty(model.metSBOTerms{i})
+            tmp_species.metaid = ['meta_' tmp_species.id];
+        end
+    else
+        tmp_species.id = tmp_met;
+        tmp_species.metaid = tmp_species.id;
+    end
     tmp_species.name=tmp_metName;
     
     try
@@ -295,6 +316,9 @@ for i=1:size(tmp_metCompartment,2)
         tmp_compartment.metaid = tmp_compartment.id;
         tmp_compartment.name=tmp_name;
         tmp_compartment.annotation = makeSBMLAnnotationString(model,tmp_compartment.metaid,'comp',i);
+        if cobrapy
+            tmp_compartment.metaid = '';
+        end
     end
     
     if i==1
@@ -331,6 +355,9 @@ if isfield(model,'genes')
         
         if isfield(model,'proteins')
             tmp_fbc_geneProduct.fbc_name = model.proteins{i};
+        end
+        if cobrapy
+            tmp_fbc_geneProduct.metaid = ['meta_' tmp_fbc_geneProduct.metaid];
         end
         
         tmp_fbc_geneProduct.annotation = makeSBMLAnnotationString(model,tmp_fbc_geneProduct.fbc_id,GeneProductAnnotations,i);
@@ -419,13 +446,21 @@ modelSubSystems = getModelSubSystems(model);
 if ~isempty(modelSubSystems)    
     sbmlModel.groups_version = 1;    
     %Build the groups for the group package.
-    groupIDs = strcat('group',cellfun(@num2str, num2cell(1:length(modelSubSystems))','UniformOutput',false));    
+    if cobrapy
+        groupIDs = strcat('G_',convertSBMLID(modelSubSystems));
+    else
+        groupIDs = strcat('group',cellfun(@num2str, num2cell(1:length(modelSubSystems))','UniformOutput',false));
+    end
     for i = 1:length(modelSubSystems)
         cgroup = tmp_group;
         groupMembers = findRxnsFromSubSystem(model,modelSubSystems{i});
         for j = 1:numel(groupMembers)            
             cMember = tmp_group_member_struct;
             cMember.groups_idRef = groupMembers{j};
+            if cobrapy
+                groupMemberPos = strcmp(model.rxns,groupMembers{j});
+                cMember.groups_name = model.rxnNames{groupMemberPos};
+            end
             if j == 1
                 cgroup.groups_member = cMember;
             else
@@ -502,7 +537,11 @@ for i=1:size(model.rxns, 1)
     
     tmp_rxnRev= (model.lb(i) < 0) + 0;
     tmp_Rxn.id=tmp_rxnID;
-    tmp_Rxn.metaid = tmp_rxnID;
+    if cobrapy
+        tmp_Rxn.metaid = ['meta_' tmp_rxnID];
+    else
+        tmp_Rxn.metaid = tmp_rxnID;
+    end
     tmp_Rxn.name=tmp_rxnName;
     tmp_Rxn.reversible=tmp_rxnRev;
     tmp_Rxn.sboTerm = tmp_Sboterm;
