@@ -71,6 +71,9 @@ for pos = 1:size(fieldentries,1)
             
             dbname = convertSBMLID(regexprep(annotationsFields{fieldid},[field allowedQualifiers{i} '(.*)' 'ID$'],'$1'),false);
             dbrdfstring = [bagindentlevel '    <rdf:li rdf:resource="https://identifiers.org/' dbname '/'];
+            if cobrapy
+                ids = strrep(ids, ' ', '');  % bug in some ids
+            end
             dbstring = strjoin(strcat(dbrdfstring,ids,sprintf('%s\n','"/>')),sprintf('\n'));
             if cobrapy
                 dblist = [dblist; dbstring];
