@@ -18,6 +18,7 @@ function outmodel = writeCbModel(model, varargin)
 %                       * fileName: File name for output file (optional, default opens dialog box)
 %                       * compSymbols: List of compartment symbols (Cell array)
 %                       * compNames:   List of compartment names corresponding to `compSymbolList` (Cell array)
+%                       * cobrapy: Boolean to guarantee compatibility with cobrapy (default=false)
 %
 % OPTIONAL OUTPUTS:
 %    outmodel:          Only useable with sbml export. Will return the sbml structure, otherwise the input COBRA model structure is returned.
@@ -42,7 +43,7 @@ function outmodel = writeCbModel(model, varargin)
 %    FBCv2 file. The current version of the `writeSBML.m` does not require the
 %    SBML toolbox (http://sbml.org/Software/SBMLToolbox).
 
-newKeyWords = {'format', 'fileName', 'compSymbols', 'compNames'};
+newKeyWords = {'format', 'fileName', 'compSymbols', 'compNames', 'cobrapy'};
 
 % set default values
 supportedSBML = 3;
@@ -122,6 +123,7 @@ else
     parser.addParamValue('fileName', '', @ischar);
     parser.addParamValue('compSymbols', compSymbols, @(x) isempty(x) || iscell(x));
     parser.addParamValue('compNames', compNames, @(x) isempty(x) || iscell(x));
+    parser.addParamValue('cobrapy', false, @islogical);
 
     % We currently only support output in SBML 3
     parser.addParamValue('sbmlLevel', supportedSBML, @(x) isnumeric(x));
@@ -131,6 +133,7 @@ else
     input = parser.Results;
     format = input.format;
     fileName = input.fileName;
+    cobrapy = input.cobrapy;
 end
 if nargout > 0
     outmodel = model;
@@ -215,7 +218,7 @@ switch format
                 fileName = [getenv('HOME'), fileName];
             end
         end
-        outmodel = writeSBML(model, fileName, input.compSymbols, input.compNames);
+        outmodel = writeSBML(model, fileName, input.compSymbols, input.compNames, cobrapy);
         %% Mat
     case 'mat'
         save(fileName, 'model')

@@ -1,4 +1,4 @@
-function [annotationString,notes] = makeSBMLAnnotationString(model,id,fieldentries,position)
+function [annotationString,notes] = makeSBMLAnnotationString(model,id,fieldentries,position,cobrapy)
 % makeSBMLAnnotationString gives the annotationString for an SBML based on the fields in the model
 %
 % USAGE:
@@ -13,6 +13,7 @@ function [annotationString,notes] = makeSBMLAnnotationString(model,id,fieldentri
 %                      being field IDs and X{:,2} being bioql qualiiers to
 %                      annotate for the field.
 %    position:         the position in the model to extract the data.
+%    cobrapy:          Boolean to guarantee compatibility with cobrapy (default=false)
 %
 % OUTPUT:
 %
@@ -25,8 +26,15 @@ function [annotationString,notes] = makeSBMLAnnotationString(model,id,fieldentri
 
 
 
+if nargin < 5
+    cobrapy = false;
+end
+
 allQualifiers = getBioQualifiers();
 
+if cobrapy
+    allQualifiers(strcmp(allQualifiers,'hasProperty')) = [];  %cobrapy does not store SBO terms as annotations (already included)
+end
 if ischar(fieldentries)
     fieldentries = {fieldentries, allQualifiers};
 end
@@ -53,6 +61,7 @@ for pos = 1:size(fieldentries,1)
         annotationsFields = relfields(cellfun(@(x) strncmp(x,[field allowedQualifiers{i}],length([field allowedQualifiers{i}])),relfields));
         knownFields = fieldMappings(cellfun(@(x) strcmp(x,allowedQualifiers{i}),fieldMappings(:,2)),:);
         dbnote = '';
+        dblist = {};
         for fieldid = 1:numel(annotationsFields)
             if isempty(model.(annotationsFields{fieldid}){position})
                 continue
@@ -63,7 +72,11 @@ for pos = 1:size(fieldentries,1)
             dbname = convertSBMLID(regexprep(annotationsFields{fieldid},[field allowedQualifiers{i} '(.*)' 'ID$'],'$1'),false);
             dbrdfstring = [bagindentlevel '    <rdf:li rdf:resource="https://identifiers.org/' dbname '/'];
             dbstring = strjoin(strcat(dbrdfstring,ids,sprintf('%s\n','"/>')),sprintf('\n'));
-            dbnote = [dbnote, dbstring];
+            if cobrapy
+                dblist = [dblist; dbstring];
+            else
+                dbnote = [dbnote, dbstring];
+            end
         end
         knownExistentFields = knownFields(ismember(knownFields(:,3),modelFields),:);
         
@@ -78,7 +91,11 @@ for pos = 1:size(fieldentries,1)
                 dbname = knownExistentFields{fieldid,1};
                 dbrdfstring = [bagindentlevel '    <rdf:li rdf:resource="https://identifiers.org/' dbname '/'];
                 dbstring = strjoin(strcat(dbrdfstring,ids(correctids),sprintf('%s\n','"/>')),sprintf('\n'));
-                dbnote = [dbnote, dbstring];
+                if cobrapy
+                    dblist = [dblist; dbstring];
+                else
+                    dbnote = [dbnote, dbstring];
+                end
             end
             %if we have incorrect ids, we will add this data to the notes
             %of the reaction.
@@ -87,6 +104,20 @@ for pos = 1:size(fieldentries,1)
             end
         end
         
+        if cobrapy
+            annotationsFields = regexprep(annotationsFields,'^metis','');
+            annotationsFields = regexprep(annotationsFields,'^rxnis','');
+            annotationsFields = regexprep(annotationsFields,'ID$','');
+            annotationsFields = convertSBMLID(annotationsFields, false);
+            allFields = sort([annotationsFields; knownExistentFields(:,1)]);
+            for fieldid = 1:numel(allFields)
+                for dbid = 1:numel(dblist)
+                    if contains(dblist{dbid}, allFields{fieldid})
+                        dbnote = [dbnote, dblist{dbid}];
+                    end
+                end
+            end
+        end
         if ~isempty(dbnote)
             %Make specification for this bag
             specstring = ['<bqbiol:' allowedQualifiers{i} ' xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">' ];
@@ -102,7 +133,11 @@ for pos = 1:size(fieldentries,1)
     end
 end
 if ~isempty(tmp_note)
-    annotopentag = '<annotation xmlns:sbml="http://www.sbml.org/sbml/level3/version1/core">';
+    if cobrapy
+        annotopentag = '<annotation>';
+    else
+        annotopentag = '<annotation xmlns:sbml="http://www.sbml.org/sbml/level3/version1/core">';
+    end
     rdfOpenTag = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:vCard4="http://www.w3.org/2006/vcard/ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">';
     annotationString = sprintf('%s\n  %s\n    ',annotopentag,rdfOpenTag);   
     annotationString = [ annotationString '<rdf:Description rdf:about="#',id,'">'];
