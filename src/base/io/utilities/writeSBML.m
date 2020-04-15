@@ -175,7 +175,7 @@ for i=1:size(model.mets, 1)
     end
     % create annotations and notes
     tmp_species.metaid=tmp_species.id;  % set the metaid for each species
-    [tmp_annot,met_notes] = makeSBMLAnnotationString(model,tmp_species.metaid,'met',i);
+    [tmp_annot,met_notes] = makeSBMLAnnotationString(model,tmp_species.metaid,'met',i,cobrapy);
 
     
     if isfield(model, 'metFormulas')
@@ -481,7 +481,7 @@ end
 for i=1:size(model.rxns, 1)
     tmp_rxnID =  model.rxns{i};
     tmp_Rxn.metaid = tmp_rxnID;
-    [tmp_Rxn.annotation,rxn_notes] = makeSBMLAnnotationString(model,tmp_Rxn.metaid,'rxn',i);
+    [tmp_Rxn.annotation,rxn_notes] = makeSBMLAnnotationString(model,tmp_Rxn.metaid,'rxn',i,cobrapy);
     tmp_note = emptyChar;
     if ~isempty(rxn_notes)
         for noteid = 1:size(rxn_notes,1)
