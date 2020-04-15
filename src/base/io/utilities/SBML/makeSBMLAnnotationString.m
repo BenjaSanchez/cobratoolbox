@@ -133,7 +133,11 @@ for pos = 1:size(fieldentries,1)
     end
 end
 if ~isempty(tmp_note)
-    annotopentag = '<annotation xmlns:sbml="http://www.sbml.org/sbml/level3/version1/core">';
+    if cobrapy
+        annotopentag = '<annotation>';
+    else
+        annotopentag = '<annotation xmlns:sbml="http://www.sbml.org/sbml/level3/version1/core">';
+    end
     rdfOpenTag = '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:vCard4="http://www.w3.org/2006/vcard/ns#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">';
     annotationString = sprintf('%s\n  %s\n    ',annotopentag,rdfOpenTag);   
     annotationString = [ annotationString '<rdf:Description rdf:about="#',id,'">'];

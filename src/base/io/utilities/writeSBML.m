@@ -271,7 +271,11 @@ for i=1:size(model.mets, 1)
         end
     end
     if ~isempty(tmp_note)
-        tmp_note = ['<body xmlns="http://www.w3.org/1999/xhtml">' tmp_note '</body>'];
+        if cobrapy
+            tmp_note = ['<html xmlns="http://www.w3.org/1999/xhtml">' tmp_note '</html>'];
+        else
+            tmp_note = ['<body xmlns="http://www.w3.org/1999/xhtml">' tmp_note '</body>'];
+        end
     end
     tmp_species.notes = tmp_note;
     tmp_species.annotation=tmp_annot;
@@ -317,6 +321,7 @@ for i=1:size(tmp_metCompartment,2)
         tmp_compartment.name=tmp_name;
         tmp_compartment.annotation = makeSBMLAnnotationString(model,tmp_compartment.metaid,'comp',i);
         if cobrapy
+            tmp_compartment.constant = 1;
             tmp_compartment.metaid = '';
         end
     end
@@ -440,8 +445,12 @@ model.rxns = strcat(reactionPrefix,convertSBMLID(model.rxns));
 %% generate Groups
 tmp_group_member_struct= getSBMLDefaultStruct('SBML_GROUPS_MEMBER',sbmlLevel, sbmlVersion,sbmlPackages, sbmlPackageVersions);
 tmp_group=getSBMLDefaultStruct('SBML_GROUPS_GROUP',sbmlLevel, sbmlVersion,sbmlPackages, sbmlPackageVersions);
-tmp_group.groups_kind = 'partonomy';
 tmp_group.sboTerm = 633;
+if cobrapy
+    tmp_group.groups_kind = 'collection';
+else
+    tmp_group.groups_kind = 'partonomy';
+end
 modelSubSystems = getModelSubSystems(model); 
 if ~isempty(modelSubSystems)    
     sbmlModel.groups_version = 1;    
@@ -515,7 +524,11 @@ for i=1:size(model.rxns, 1)
         end
     end
     if ~isempty(tmp_note)
-        tmp_note = ['<body xmlns="http://www.w3.org/1999/xhtml">' tmp_note '</body>'];
+        if cobrapy
+            tmp_note = ['<html xmlns="http://www.w3.org/1999/xhtml">' tmp_note '</html>'];
+        else
+            tmp_note = ['<body xmlns="http://www.w3.org/1999/xhtml">' tmp_note '</body>'];
+        end
     end
     tmp_Rxn.notes=tmp_note;
     
