@@ -488,11 +488,11 @@ model.rxns = strcat(reactionPrefix,convertSBMLID(model.rxns));
 %% generate Groups
 tmp_group_member_struct= getSBMLDefaultStruct('SBML_GROUPS_MEMBER',sbmlLevel, sbmlVersion,sbmlPackages, sbmlPackageVersions);
 tmp_group=getSBMLDefaultStruct('SBML_GROUPS_GROUP',sbmlLevel, sbmlVersion,sbmlPackages, sbmlPackageVersions);
-tmp_group.sboTerm = 633;
 if cobrapy
     tmp_group.groups_kind = 'collection';
 else
     tmp_group.groups_kind = 'partonomy';
+    tmp_group.sboTerm = 633;
 end
 modelSubSystems = getModelSubSystems(model); 
 if ~isempty(modelSubSystems)    
