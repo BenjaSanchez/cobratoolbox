@@ -575,7 +575,7 @@ for i=1:size(model.rxns, 1)
         if ~isempty(model.rxnSBOTerms{i})
             tmp_Sboterm = str2num(regexprep(model.rxnSBOTerms{i},'^SBO:0*([1-9][0-9]*)$','$1'));
         else
-            tmp_Sboterm = defaultSboTerm;
+            tmp_Sboterm = 167;  %biochemical or transport reaction
         end
     else
         %Not existent.
