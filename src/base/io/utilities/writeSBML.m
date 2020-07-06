@@ -3,7 +3,7 @@ function sbmlModel = writeSBML(model,fileName,compSymbolList,compNameList,cobrap
 %
 % USAGE:
 %
-%    sbmlModel = writeSBML(model, fileName, compSymbolList, compNameList)
+%    sbmlModel = writeSBML(model, fileName, compSymbolList, compNameList, cobrapy)
 %
 % INPUTS:
 %    model:             COBRA model structure
@@ -319,7 +319,7 @@ for i=1:size(tmp_metCompartment,2)
         tmp_compartment.id= [compPrefix, tmp_id];
         tmp_compartment.metaid = tmp_compartment.id;
         tmp_compartment.name=tmp_name;
-        tmp_compartment.annotation = makeSBMLAnnotationString(model,tmp_compartment.metaid,'comp',i);
+        tmp_compartment.annotation = makeSBMLAnnotationString(model,tmp_compartment.metaid,'comp',i,cobrapy);
         if cobrapy
             tmp_compartment.constant = 1;
             tmp_compartment.metaid = '';
@@ -365,7 +365,7 @@ if isfield(model,'genes')
             tmp_fbc_geneProduct.metaid = ['meta_' tmp_fbc_geneProduct.metaid];
         end
         
-        tmp_fbc_geneProduct.annotation = makeSBMLAnnotationString(model,tmp_fbc_geneProduct.fbc_id,GeneProductAnnotations,i);
+        tmp_fbc_geneProduct.annotation = makeSBMLAnnotationString(model,tmp_fbc_geneProduct.fbc_id,GeneProductAnnotations,i,cobrapy);
         if i==1
             sbmlModel.fbc_geneProduct=tmp_fbc_geneProduct;
         else
