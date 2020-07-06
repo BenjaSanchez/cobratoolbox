@@ -979,7 +979,7 @@ switch solver
                 % we simply remove the objective and solve again.
                 % if the status becomes 'OPTIMAL', it is unbounded, otherwise it is infeasible.
                 gurobiLP.obj(:) = 0;
-                resultgurobi = gurobi(gurrobiLP,param);
+                resultgurobi = gurobi(gurobiLP,param);
                 if strcmp(resultgurobi.status,'OPTIMAL')
                     stat = 2;
                 else
@@ -1348,6 +1348,7 @@ switch solver
             x = CplexLPproblem.Solution.x;
             w = osense*CplexLPproblem.Solution.reducedcost;
             y = osense*CplexLPproblem.Solution.dual;
+            %res1 = A*solution.full + solution.slack - b;
             s = b - A * x; % output the slack variables
         elseif origStat == 2 ||   origStat == 20
             stat = 2; %unbounded
